@@ -10,6 +10,13 @@ To use this library you need to add nuGet package. Use NuGet package manager or 
 dotnet add package Dumba.BlazorStore
 ```
 
+Build-in methods:
+1. Get - returns value, can throw null-reference
+2. GetOrDefault - returns value, if there are any null, returns default (in expressions there cannot be User?.Name)
+3. Set - updates value and re-render dependent components
+4. Add - add value to collection or dictionary and re-render dependent components
+5. Remove - remove value from collection or dictionary and re-render dependent components
+
 ### Declaration
 
 ```csharp
@@ -43,26 +50,6 @@ public class Store : BlazorStore<State>
 }
 ```
 
-There are 3 main methods:
-1. Get - returns value, can throw null-reference
-2. GetOrDefault - returns value, if there are any null, returns default (in expressions there cannot be User?.Name)
-3. Set - updates value and re-render dependent components
-
-### Optional: Store actions
-
-When you have some actions composed by multiple actions, you can create store method
-
-```csharp
-public class Store : BlazorStore<State>
-{
-  public void Login(User user)
-  {
-    Set(s => s.User, user);
-    Set(s => s.Url, "dashboard");
-  }
-}
-```
-
 ### Common Mistakes
 
 ```csharp
@@ -91,24 +78,4 @@ private string UserName
   // This will re-render all components that use any user
   // property. It is useless
 }
-```
-
-### More features
-
-You can handle any data change by your own using `OnChange` method.
-
-```csharp
-store.OnChange(
-  s => s.User.Age, 
-  (newValue, oldValue, changeExpression) =>
-  {
-    Console.WriteLine("This will be executed anytime Age or User changes");
-  });
-```
-
-Your OnChange method is called even if any containing object is changed. When previous example continues with following code, method will be executed twice, even if newValue and oldValue are equal. 
-
-```csharp
-store.Set(s => s.User.Age, 13);
-store.Set(s => s.User, new User { Age = 13 });
 ```
