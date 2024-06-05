@@ -1,4 +1,4 @@
-namespace Dumba.BlazorStore;
+namespace DriDrood.BlazorStore;
 internal class MetadataNode
 {
     public MetadataNode(MetadataNode? parent)

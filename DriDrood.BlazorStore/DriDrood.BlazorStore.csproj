@@ -5,13 +5,13 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <PackageId>Dumba.BlazorStore</PackageId>
+    <PackageId>DriDrood.BlazorStore</PackageId>
     <Version>1.0.0</Version>
     <Authors>Samuel Lachman</Authors>
     <Copyright>Copyright (c) 2023 Samuel Lachman</Copyright>
     <PackageTags>Blazor</PackageTags>
     <Description>Library for managing data in Blazor app.</Description>
-    <RepositoryUrl>https://github.com/Dumba/BlazorStore</RepositoryUrl>
+    <RepositoryUrl>https://github.com/DriDrood/BlazorStore</RepositoryUrl>
     <PackageReadmeFile>readme.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
   </PropertyGroup>

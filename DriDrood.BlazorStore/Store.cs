@@ -1,7 +1,7 @@
-using Dumba.BlazorStore.Extensions;
+using DriDrood.BlazorStore.Extensions;
 using System.Linq.Expressions;
 
-namespace Dumba.BlazorStore;
+namespace DriDrood.BlazorStore;
 public class Store<TState>
     where TState : notnull, new()
 {

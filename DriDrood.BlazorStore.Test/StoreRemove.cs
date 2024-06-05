@@ -1,6 +1,6 @@
-using Dumba.BlazorStore.Test.Store;
+using DriDrood.BlazorStore.Test.Store;
 
-namespace Dumba.BlazorStore.Test;
+namespace DriDrood.BlazorStore.Test;
 public class StoreRemove
 {
     public StoreRemove()

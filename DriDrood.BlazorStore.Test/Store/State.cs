@@ -1,4 +1,4 @@
-namespace Dumba.BlazorStore.Test.Store;
+namespace DriDrood.BlazorStore.Test.Store;
 internal class State
 {
     public User? User { get; set; }

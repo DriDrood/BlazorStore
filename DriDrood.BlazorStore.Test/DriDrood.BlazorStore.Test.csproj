@@ -23,7 +23,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Dumba.BlazorStore\Dumba.BlazorStore.csproj" />
+    <ProjectReference Include="..\DriDrood.BlazorStore\DriDrood.BlazorStore.csproj" />
   </ItemGroup>
 
 </Project>

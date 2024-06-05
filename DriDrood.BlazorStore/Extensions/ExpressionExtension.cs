@@ -2,7 +2,7 @@ using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace Dumba.BlazorStore.Extensions;
+namespace DriDrood.BlazorStore.Extensions;
 static class ExpressionExtension
 {
     public static TOut? GetValueOrNull<TIn, TOut>(this Expression<Func<TIn, TOut>> expression, TIn value)
