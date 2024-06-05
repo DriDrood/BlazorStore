@@ -77,4 +77,16 @@ public class StoreGetOrDefault
 
         Assert.False(isRerendered);
     }
+
+    [Fact]
+    public void KeyIsLocalVariable()
+    {
+        string key = "A";
+        bool isRerendered = false;
+        _ = _store.GetOrDefault(s => s.Dict[key], () => isRerendered = true);
+
+        _store.Set(s => s.Dict[key], "TestAA");
+
+        Assert.True(isRerendered);
+    }
 }
