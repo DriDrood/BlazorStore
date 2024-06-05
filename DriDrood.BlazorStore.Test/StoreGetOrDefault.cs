@@ -89,4 +89,20 @@ public class StoreGetOrDefault
 
         Assert.True(isRerendered);
     }
+
+    [Fact]
+    public void MultipleDependency()
+    {
+        bool isRerendered = false;
+        _ = _store.GetOrDefault(s => s.Dict[s.User!.Name!], () => isRerendered = true);
+
+        Assert.False(isRerendered);
+
+        _store.Set(s => s.User!.Name, "Test2");
+        Assert.True(isRerendered);
+
+        isRerendered = false;
+        _store.Set(s => s.Dict["Test"], "TTT");
+        Assert.True(isRerendered);
+    }
 }
