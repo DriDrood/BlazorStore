@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace Dumba.BlazorStore.Extensions;
 static class ExpressionExtension
@@ -36,7 +37,10 @@ static class ExpressionExtension
             (object? innerValue, IEnumerable<object> prevPath) = GetValueOrNullInner(value, memExpr.Expression!);
             string propertyName = memExpr.Member.Name;
 
-            object? outValue = innerValue?.GetType().GetProperty(propertyName)!.GetValue(innerValue);
+            object? outValue = memExpr.Member is FieldInfo fieldInfo
+                ? fieldInfo.GetValue(innerValue) // local variables
+                : innerValue?.GetType().GetProperty(propertyName)!.GetValue(innerValue);
+
             return (outValue, prevPath.Append(propertyName));
         }
 
