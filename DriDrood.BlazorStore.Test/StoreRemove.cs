@@ -25,7 +25,9 @@ public class StoreRemove
     [Fact]
     public void DictRemoveOutOfRange()
     {
-        Assert.Throws<KeyNotFoundException>(() => _store.Remove(s => s.Dict, "B"));
+        bool result = _store.Remove(s => s.Dict, "B");
+
+        Assert.False(result);
     }
 
     [Fact]
@@ -37,14 +39,17 @@ public class StoreRemove
     [Fact]
     public void DictRemoveReRender()
     {
+        bool reRenderDict = false;
         bool reRenderA = false;
         bool reRenderQ = false;
         
+        _ = _store.GetOrDefault(s => s.Dict, () => reRenderDict = true);
         _ = _store.GetOrDefault(s => s.Dict["A"], () => reRenderA = true);
         _ = _store.GetOrDefault(s => s.Dict["Q"], () => reRenderQ = true);
 
         _store.Remove(s => s.Dict, "A");
 
+        Assert.True(reRenderDict);
         Assert.True(reRenderA);
         Assert.False(reRenderQ);
     }
@@ -62,22 +67,27 @@ public class StoreRemove
     [Fact]
     public void CollectionRemoveOutOfRange()
     {
-        Assert.Throws<InvalidOperationException>(() => _store.Remove(s => s.List, "TestB"));
+        bool result = _store.Remove(s => s.List, "TestB");
+
+        Assert.False(result);
     }
     
     [Fact]
     public void CollectionRemoveReRender()
     {
+        bool reRenderList = false;
         bool reRenderA = false;
         bool reRenderQ = false;
         bool reRenderZ = false;
         
+        _ = _store.GetOrDefault(s => s.List, () => reRenderList = true);
         _ = _store.GetOrDefault(s => s.List[0], () => reRenderA = true);
         _ = _store.GetOrDefault(s => s.List[1], () => reRenderQ = true);
         _ = _store.GetOrDefault(s => s.List[2], () => reRenderZ = true);
 
         _store.Remove(s => s.List, "TestQ");
 
+        Assert.True(reRenderList);
         Assert.False(reRenderA);
         Assert.True(reRenderQ);
         Assert.False(reRenderZ);

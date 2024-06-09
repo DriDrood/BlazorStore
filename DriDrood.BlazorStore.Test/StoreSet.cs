@@ -34,5 +34,8 @@ public class StoreSet
 
         _store.Set(s => s.User!.Name, "Test2");
         Assert.Equal("Test2", _state.User!.Name);
+
+        _store.Set(s => s.Dict["BBB"], "abc");
+        Assert.Equal("abc", _state.Dict["BBB"]);
     }
 }

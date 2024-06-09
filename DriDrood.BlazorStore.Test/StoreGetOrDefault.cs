@@ -38,17 +38,16 @@ public class StoreGetOrDefault
     [Fact]
     public void GetNull()
     {
-        string? url = _store.GetOrDefault(s => s.EmptyUser!.Name);
-        Assert.Null(url);
+        string? userName = _store.GetOrDefault(s => s.EmptyUser!.Name);
+        Assert.Null(userName);
     }
 
     [Fact]
     public void ReRender()
     {
         bool isRerendered = false;
-        Action rerender = () => isRerendered = true;
 
-        _ = _store.GetOrDefault(s => s.Url, rerender);
+        _ = _store.GetOrDefault(s => s.Url, () => isRerendered = true);
         _store.Set(s => s.Url, "www.example2.com");
 
         Assert.True(isRerendered);
@@ -58,9 +57,8 @@ public class StoreGetOrDefault
     public void ReRenderChild()
     {
         bool isRerendered = false;
-        Action rerender = () => isRerendered = true;
 
-        _ = _store.GetOrDefault(s => s.User!.Name, rerender);
+        _ = _store.GetOrDefault(s => s.User!.Name, () => isRerendered = true);
         _store.Set(s => s.User, new() { Name = "Test2", Age = 18 });
 
         Assert.True(isRerendered);
@@ -70,9 +68,8 @@ public class StoreGetOrDefault
     public void NotReRendered()
     {
         bool isRerendered = false;
-        Action rerender = () => isRerendered = true;
 
-        _ = _store.GetOrDefault(s => s.User, rerender);
+        _ = _store.GetOrDefault(s => s.User, () => isRerendered = true);
         _store.Set(s => s.Url, "www.example2.com");
 
         Assert.False(isRerendered);
@@ -93,8 +90,48 @@ public class StoreGetOrDefault
     [Fact]
     public void MultipleDependency()
     {
+        bool isRerenderedDoubleDependency = false;
+        bool isRerenderedFirstValue = false;
+        bool isRerenderedSecondValue = false;
+        bool isRerenderedOtherDependency = false;
+        _ = _store.GetOrDefault(s => s.Dict[s.User!.Name!], () => isRerenderedDoubleDependency = true);
+        _ = _store.GetOrDefault(s => s.Dict["Test"], () => isRerenderedFirstValue = true);
+        _ = _store.GetOrDefault(s => s.Dict["A"], () => isRerenderedSecondValue = true);
+        _ = _store.GetOrDefault(s => s.DictEmpty[s.User!.Name!], () => isRerenderedOtherDependency = true);
+
+        Assert.False(isRerenderedDoubleDependency);
+        Assert.False(isRerenderedFirstValue);
+        Assert.False(isRerenderedSecondValue);
+        Assert.False(isRerenderedOtherDependency);
+
+        _store.Set(s => s.Dict["Test"], "TTT");
+        Assert.True(isRerenderedDoubleDependency);
+        Assert.True(isRerenderedFirstValue);
+        Assert.False(isRerenderedSecondValue);
+        Assert.False(isRerenderedOtherDependency);
+        isRerenderedDoubleDependency = false;
+        isRerenderedFirstValue = false;
+
+        _store.Set(s => s.User!.Name, "A");
+        Assert.True(isRerenderedDoubleDependency);
+        Assert.False(isRerenderedFirstValue);
+        Assert.False(isRerenderedSecondValue);
+        Assert.True(isRerenderedOtherDependency);
+        isRerenderedDoubleDependency = false;
+        isRerenderedOtherDependency = false;
+
+        _store.Set(s => s.Dict["A"], "TTT");
+        Assert.True(isRerenderedDoubleDependency);
+        Assert.False(isRerenderedFirstValue);
+        Assert.True(isRerenderedSecondValue);
+        Assert.False(isRerenderedOtherDependency);
+    }
+
+    [Fact]
+    public void DeepMultipleDependency()
+    {
         bool isRerendered = false;
-        _ = _store.GetOrDefault(s => s.Dict[s.User!.Name!], () => isRerendered = true);
+        _ = _store.GetOrDefault(s => s.Dict[s.Dict[s.User!.Name!]], () => isRerendered = true);
 
         Assert.False(isRerendered);
 

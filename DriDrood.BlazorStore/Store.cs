@@ -1,5 +1,6 @@
-using DriDrood.BlazorStore.Extensions;
 using System.Linq.Expressions;
+using DriDrood.BlazorStore.Extensions;
+using DriDrood.BlazorStore.Tools;
 
 namespace DriDrood.BlazorStore;
 public class Store<TState>
@@ -8,7 +9,7 @@ public class Store<TState>
     public Store(TState? state = default)
     {
         _state = state ?? new();
-        _metadataRoot = new MetadataNode(null);
+        _metadataRoot = new(null, null, null);
     }
 
     protected TState _state;
@@ -16,11 +17,14 @@ public class Store<TState>
 
     public TValue Get<TValue>(Expression<Func<TState, TValue>> expressionPath, Action? componentRerender = null)
     {
+        // resolve expression
+        ExpressionResolver<TState> resolver = new(_state, _metadataRoot, IndirectDependencyHandling.Write);
+        (_, MetadataNode? node) = resolver.Resolve(expressionPath);
+
         // add dependency
-        if (componentRerender is not null)
+        if (componentRerender is not null && node is not null)
         {
-            MetadataNode metadataNode = GetNode(expressionPath);
-            metadataNode.Dependencies.Add(componentRerender);
+            node.Dependencies.Add(componentRerender);
         }
 
         // get value
@@ -30,143 +34,101 @@ public class Store<TState>
     }
     public TValue? GetOrDefault<TValue>(Expression<Func<TState, TValue>> expressionPath, Action? componentRerender = null)
     {
+        // resolve expression
+        ExpressionResolver<TState> resolver = new(_state, _metadataRoot, IndirectDependencyHandling.Write);
+        (TValue? value, MetadataNode? node) = resolver.Resolve(expressionPath);
+
         // add dependency
-        if (componentRerender is not null)
+        if (componentRerender is not null && node is not null)
         {
-            MetadataNode metadataNode = GetNode(expressionPath);
-            metadataNode.Dependencies.Add(componentRerender);
+            node.Dependencies.Add(componentRerender);
+            foreach ((MetadataNode indirectParent, MetadataNode mergeNode) in resolver.IndirectParents)
+            {
+                indirectParent.IndirectDependencies.Add((componentRerender, mergeNode));
+            }
         }
 
-        // get value
-        TValue? result = expressionPath.GetValueOrNull(_state);
-        return result ?? default;
+        // return value
+        return value;
     }
 
-    public void Set<TValue>(Expression<Func<TState, TValue>> expressionPath, TValue value)
+    public void Set<TValue>(Expression<Func<TState, TValue>> expressionPath, TValue newValue)
     {
-        TValue oldValue = Get(expressionPath);
-
-        // change state
-        MetadataNode metadataNode = GetNode(expressionPath);
+        // create setter
         ParameterExpression stateParamExpr = expressionPath.Parameters[0];
-
-        // set value
         Action<TState, TValue> setter = CreateValueSetter(expressionPath, stateParamExpr);
-        setter(_state, value);
+
+        // change value
+        setter(_state, newValue);
 
         // re-render
-        foreach (Action componentRerender in metadataNode.DependencyTree)
-        {
-            componentRerender();
-        }
+        Rerender(expressionPath);
     }
 
     public void Add<TKey, TValue>(Expression<Func<TState, Dictionary<TKey, TValue>>> expressionPath, TKey key, TValue value)
         where TKey : notnull
     {
-        // create new node
-        MetadataNode parentNode = GetNode(expressionPath);
-        MetadataNode childNode = new(parentNode);
-        parentNode.Children.Add(key, childNode);
+        // resolve expression
+        ExpressionResolver<TState> resolver = new(_state, _metadataRoot, IndirectDependencyHandling.Write);
+        (Dictionary<TKey, TValue>? dict, MetadataNode? node) = resolver.Resolve(expressionPath);
+        if (dict is null)
+            return;
 
-        // set value
-        Func<TState, Dictionary<TKey, TValue>> getter = expressionPath.Compile();
-        Dictionary<TKey, TValue> dict = getter(_state);
+        // change value
         dict.Add(key, value);
 
         // re-render
-        foreach (Action componentRerender in parentNode.DependencyTree)
-        {
-            componentRerender();
-        }
+        Rerender(resolver, node, n => n.Dependencies.Concat(n.Children.TryGetValue(key, out var child) ? child.DependencyTree : Enumerable.Empty<Action>()));
     }
     public void Add<TValue>(Expression<Func<TState, ICollection<TValue>>> expressionPath, TValue value)
     {
-        // create new node
-        MetadataNode parentNode = GetNode(expressionPath);
-        MetadataNode childNode = new(parentNode);
-        parentNode.Children.Add(parentNode.Children.Keys.Cast<int>().MaxOrDefault(-1) + 1, childNode);
+        // resolve expression
+        ExpressionResolver<TState> resolver = new(_state, _metadataRoot, IndirectDependencyHandling.Write);
+        (ICollection<TValue>? collection, MetadataNode? node) = resolver.Resolve(expressionPath);
+        if (collection is null)
+            return;
 
-        // set value
-        Func<TState, ICollection<TValue>> getter = expressionPath.Compile();
-        ICollection<TValue> collection = getter(_state);
+        // change value
+        int valueIndex = collection.Count;
         collection.Add(value);
 
         // re-render
-        foreach (Action componentRerender in parentNode.DependencyTree)
-        {
-            componentRerender();
-        }
+        Rerender(resolver, node, n => n.Dependencies.Concat(n.Children.TryGetValue(valueIndex, out var child) ? child.DependencyTree : Enumerable.Empty<Action>()));
     }
 
-    public void Remove<TKey, TValue>(Expression<Func<TState, Dictionary<TKey, TValue>>> expressionPath, TKey key)
+    public bool Remove<TKey, TValue>(Expression<Func<TState, Dictionary<TKey, TValue>>> expressionPath, TKey key)
         where TKey : notnull
     {
-        Func<TState, Dictionary<TKey, TValue>> getter = expressionPath.Compile();
-        Dictionary<TKey, TValue> dict = getter(_state);
-        TValue oldValue = dict[key];
+        // resolve expression
+        ExpressionResolver<TState> resolver = new(_state, _metadataRoot, IndirectDependencyHandling.Write);
+        (Dictionary<TKey, TValue>? dict, MetadataNode? node) = resolver.Resolve(expressionPath);
+        if (dict is null)
+            return false;
 
-        // remove node
-        MetadataNode parentNode = GetNode(expressionPath);
-        MetadataNode childNode = GetOrCreateChild(parentNode, key);
-        parentNode.Children.Remove(key);
-
-        // remove value
-        dict.Remove(key);
+        // change value
+        bool result = dict.Remove(key);
 
         // re-render
-        foreach (Action componentRerender in childNode.DependencyTree)
-        {
-            componentRerender();
-        }
-    }
-    public void Remove<TValue>(Expression<Func<TState, ICollection<TValue>>> expressionPath, TValue value)
-    {
-        Func<TState, ICollection<TValue>> getter = expressionPath.Compile();
-        ICollection<TValue> collection = getter(_state);
-
-        // remove node
-        MetadataNode parentNode = GetNode(expressionPath);
-        int index = collection.IndexOf(value);
-        if (index == -1)
-            index = parentNode.Children.Keys.Cast<int>().Max() + 1;
-
-        MetadataNode childNode = GetOrCreateChild(parentNode, index);
-        parentNode.Children.Remove(index);
-
-        // remove value
-        collection.Remove(value);
-
-        // re-render
-        foreach (Action componentRerender in childNode.DependencyTree)
-        {
-            componentRerender();
-        }
-    }
-
-    private MetadataNode GetNode<TValue>(Expression<Func<TState, TValue>> expressionPath)
-    {
-        IEnumerable<object> path = expressionPath.GetPath();
-
-        MetadataNode result = _metadataRoot;
-        foreach (object key in path)
-        {
-            result = GetOrCreateChild(result, key);
-        }
+        Rerender(resolver, node, n => n.Dependencies.Concat(n.Children.TryGetValue(key, out var child) ? child.DependencyTree : Enumerable.Empty<Action>()));
 
         return result;
     }
-
-    private MetadataNode GetOrCreateChild(MetadataNode parent, object key)
+    public bool Remove<TValue>(Expression<Func<TState, ICollection<TValue>>> expressionPath, TValue value)
     {
-        if (!parent.Children.TryGetValue(key, out MetadataNode? childNode))
-        {
-            childNode = new(parent);
+        // resolve expression
+        ExpressionResolver<TState> resolver = new(_state, _metadataRoot, IndirectDependencyHandling.Write);
+        (ICollection<TValue>? collection, MetadataNode? node) = resolver.Resolve(expressionPath);
+        if (collection is null)
+            return false;
 
-            parent.Children.Add(key, childNode);
-        }
+        // change value
+        int valueIndex = collection.IndexOf(value);
+        bool result = collection.Remove(value);
 
-        return childNode;
+        // re-render
+        Rerender(resolver, node, n => n.Dependencies.Concat(n.Children.TryGetValue(valueIndex, out var child) ? child.DependencyTree : Enumerable.Empty<Action>()));
+
+        return result;
     }
 
     private Action<TState, TValue> CreateValueSetter<TValue>(Expression<Func<TState, TValue>> expr, ParameterExpression stateParamExpr)
@@ -187,5 +149,32 @@ public class Store<TState>
             valueParamExpr);
 
         return setterExpr.Compile();
+    }
+
+    private void Rerender<TValue>(Expression<Func<TState, TValue>> expressionPath, Func<MetadataNode, IEnumerable<Action>>? getDependencies = null)
+    {
+        ExpressionResolver<TState> resolver = new(_state, _metadataRoot, IndirectDependencyHandling.Read);
+        (_, MetadataNode? node) = resolver.Resolve(expressionPath);
+
+        Rerender(resolver, node, getDependencies);
+    }
+    private void Rerender(ExpressionResolver<TState> resolver, MetadataNode? resolvedNode, Func<MetadataNode, IEnumerable<Action>>? getDependencies = null)
+    {
+        if (resolvedNode is not null)
+        {
+            IEnumerable<Action> dependencies = getDependencies?.Invoke(resolvedNode) ?? resolvedNode.DependencyTree;
+            foreach (Action componentRerender in dependencies)
+            {
+                componentRerender();
+            }
+        }
+
+        foreach (Action componentRerender in resolver.IndirectParents
+            .SelectMany(pair => pair.parent.IndirectDependencies
+                .Where(depPair => depPair.parent == pair.mergeNode)
+                .Select(depPair => depPair.rerenderer)))
+        {
+            componentRerender();
+        }
     }
 }
