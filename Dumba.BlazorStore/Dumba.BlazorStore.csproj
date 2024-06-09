@@ -5,7 +5,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 
-    <PackageId>DriDrood.BlazorStore</PackageId>
+    <PackageId>Dumba.BlazorStore</PackageId>
     <Version>1.0.0</Version>
     <Authors>Samuel Lachman</Authors>
     <Copyright>Copyright (c) 2023 Samuel Lachman</Copyright>

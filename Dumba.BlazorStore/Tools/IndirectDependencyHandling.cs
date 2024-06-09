@@ -1,4 +1,4 @@
-namespace DriDrood.BlazorStore.Tools;
+namespace Dumba.BlazorStore.Tools;
 public enum IndirectDependencyHandling
 {
     /// <summary>

@@ -1,6 +1,6 @@
-using DriDrood.BlazorStore.Test.Store;
+using Dumba.BlazorStore.Test.Store;
 
-namespace DriDrood.BlazorStore.Test;
+namespace Dumba.BlazorStore.Test;
 public class StoreGet
 {
     public StoreGet()

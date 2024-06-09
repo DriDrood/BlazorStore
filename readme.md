@@ -7,7 +7,7 @@ Library for managing data in Blazor app. It re-render only those component, that
 To use this library you need to add nuGet package. Use NuGet package manager or following command:
 
 ```bash
-dotnet add package DriDrood.BlazorStore
+dotnet add package Dumba.BlazorStore
 ```
 
 Build-in methods:

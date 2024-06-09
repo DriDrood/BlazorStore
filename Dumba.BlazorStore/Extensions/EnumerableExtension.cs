@@ -1,4 +1,4 @@
-namespace DriDrood.BlazorStore.Extensions;
+namespace Dumba.BlazorStore.Extensions;
 static class EnumerableExtension
 {
     public static int MaxOrDefault(this IEnumerable<int> source, int defaultValue = default)

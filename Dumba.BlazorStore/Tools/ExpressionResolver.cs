@@ -2,7 +2,7 @@ using System.Collections;
 using System.Linq.Expressions;
 using System.Reflection;
 
-namespace DriDrood.BlazorStore.Tools;
+namespace Dumba.BlazorStore.Tools;
 internal class ExpressionResolver<TState>
     where TState : notnull, new()
 {

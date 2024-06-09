@@ -1,8 +1,8 @@
 using System.Linq.Expressions;
-using DriDrood.BlazorStore.Extensions;
-using DriDrood.BlazorStore.Tools;
+using Dumba.BlazorStore.Extensions;
+using Dumba.BlazorStore.Tools;
 
-namespace DriDrood.BlazorStore;
+namespace Dumba.BlazorStore;
 public class Store<TState>
     where TState : notnull, new()
 {

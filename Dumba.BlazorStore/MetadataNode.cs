@@ -1,6 +1,6 @@
 using System.Linq.Expressions;
 
-namespace DriDrood.BlazorStore;
+namespace Dumba.BlazorStore;
 internal class MetadataNode
 {
     public MetadataNode(MetadataNode? parent, object? parentKey, Expression? nodeExpression)
