@@ -15,7 +15,7 @@ public class Store<TState>
     protected TState _state;
     private MetadataNode _metadataRoot;
 
-    public TValue Get<TValue>(Expression<Func<TState, TValue>> expressionPath, Action? componentRerender = null)
+    public virtual TValue Get<TValue>(Expression<Func<TState, TValue>> expressionPath, Action? componentRerender = null)
     {
         // resolve expression
         ExpressionResolver<TState> resolver = new(_state, _metadataRoot, IndirectDependencyHandling.Write);
@@ -32,7 +32,7 @@ public class Store<TState>
         TValue value = getter(_state);
         return value;
     }
-    public TValue? GetOrDefault<TValue>(Expression<Func<TState, TValue>> expressionPath, Action? componentRerender = null)
+    public virtual TValue? GetOrDefault<TValue>(Expression<Func<TState, TValue>> expressionPath, Action? componentRerender = null)
     {
         // resolve expression
         ExpressionResolver<TState> resolver = new(_state, _metadataRoot, IndirectDependencyHandling.Write);
@@ -52,7 +52,7 @@ public class Store<TState>
         return value;
     }
 
-    public void Set<TValue>(Expression<Func<TState, TValue>> expressionPath, TValue newValue)
+    public virtual void Set<TValue>(Expression<Func<TState, TValue>> expressionPath, TValue newValue)
     {
         // create setter
         ParameterExpression stateParamExpr = expressionPath.Parameters[0];
@@ -64,7 +64,7 @@ public class Store<TState>
         // re-render
         Rerender(expressionPath);
     }
-    public void Set<TKey, TValue>(Expression<Func<TState, Dictionary<TKey, TValue>>> expressionPath, TKey key, TValue value)
+    public virtual void Set<TKey, TValue>(Expression<Func<TState, Dictionary<TKey, TValue>>> expressionPath, TKey key, TValue value)
         where TKey : notnull
     {
         // resolve expression
@@ -80,7 +80,7 @@ public class Store<TState>
         Rerender(resolver, node, n => n.Dependencies.Concat(n.Children.TryGetValue(key, out var child) ? child.DependencyTree : Enumerable.Empty<Action>()));
     }
 
-    public void Add<TKey, TValue>(Expression<Func<TState, Dictionary<TKey, TValue>>> expressionPath, TKey key, TValue value)
+    public virtual void Add<TKey, TValue>(Expression<Func<TState, Dictionary<TKey, TValue>>> expressionPath, TKey key, TValue value)
         where TKey : notnull
     {
         // resolve expression
@@ -95,7 +95,7 @@ public class Store<TState>
         // re-render
         Rerender(resolver, node, n => n.Dependencies.Concat(n.Children.TryGetValue(key, out var child) ? child.DependencyTree : Enumerable.Empty<Action>()));
     }
-    public void Add<TValue>(Expression<Func<TState, ICollection<TValue>>> expressionPath, TValue value)
+    public virtual void Add<TValue>(Expression<Func<TState, ICollection<TValue>>> expressionPath, TValue value)
     {
         // resolve expression
         ExpressionResolver<TState> resolver = new(_state, _metadataRoot, IndirectDependencyHandling.Write);
@@ -111,7 +111,7 @@ public class Store<TState>
         Rerender(resolver, node, n => n.Dependencies.Concat(n.Children.TryGetValue(valueIndex, out var child) ? child.DependencyTree : Enumerable.Empty<Action>()));
     }
 
-    public bool Remove<TKey, TValue>(Expression<Func<TState, Dictionary<TKey, TValue>>> expressionPath, TKey key)
+    public virtual bool Remove<TKey, TValue>(Expression<Func<TState, Dictionary<TKey, TValue>>> expressionPath, TKey key)
         where TKey : notnull
     {
         // resolve expression
@@ -128,7 +128,7 @@ public class Store<TState>
 
         return result;
     }
-    public bool Remove<TValue>(Expression<Func<TState, ICollection<TValue>>> expressionPath, TValue value)
+    public virtual bool Remove<TValue>(Expression<Func<TState, ICollection<TValue>>> expressionPath, TValue value)
     {
         // resolve expression
         ExpressionResolver<TState> resolver = new(_state, _metadataRoot, IndirectDependencyHandling.Write);
