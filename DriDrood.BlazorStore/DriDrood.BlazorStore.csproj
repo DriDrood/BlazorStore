@@ -6,7 +6,7 @@
     <Nullable>enable</Nullable>
 
     <PackageId>DriDrood.BlazorStore</PackageId>
-    <Version>1.0.1</Version>
+    <Version>1.1.0</Version>
     <Authors>Samuel Lachman</Authors>
     <Copyright>Copyright (c) 2023 Samuel Lachman</Copyright>
     <PackageTags>Blazor</PackageTags>
