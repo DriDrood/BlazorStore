@@ -38,4 +38,15 @@ public class StoreSet
         _store.Set(s => s.Dict["BBB"], "abc");
         Assert.Equal("abc", _state.Dict["BBB"]);
     }
+
+    [Fact]
+    public void SetDictValue()
+    {
+        _store.Set(s => s.Dict, "A", "TestB");
+        Assert.Equal("TestB", _state.Dict["A"]);
+
+        _store.Set(s => s.Dict, "uuu", "TestC");
+        Assert.True(_state.Dict.ContainsKey("uuu"));
+        Assert.Equal("TestC", _state.Dict["uuu"]);
+    }
 }

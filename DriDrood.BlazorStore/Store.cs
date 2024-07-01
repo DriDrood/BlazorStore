@@ -64,6 +64,21 @@ public class Store<TState>
         // re-render
         Rerender(expressionPath);
     }
+    public void Set<TKey, TValue>(Expression<Func<TState, Dictionary<TKey, TValue>>> expressionPath, TKey key, TValue value)
+        where TKey : notnull
+    {
+        // resolve expression
+        ExpressionResolver<TState> resolver = new(_state, _metadataRoot, IndirectDependencyHandling.Write);
+        (Dictionary<TKey, TValue>? dict, MetadataNode? node) = resolver.Resolve(expressionPath);
+        if (dict is null)
+            return;
+
+        // change value
+        dict[key] = value;
+
+        // re-render
+        Rerender(resolver, node, n => n.Dependencies.Concat(n.Children.TryGetValue(key, out var child) ? child.DependencyTree : Enumerable.Empty<Action>()));
+    }
 
     public void Add<TKey, TValue>(Expression<Func<TState, Dictionary<TKey, TValue>>> expressionPath, TKey key, TValue value)
         where TKey : notnull
