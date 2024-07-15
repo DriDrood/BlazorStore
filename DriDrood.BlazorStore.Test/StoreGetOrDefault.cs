@@ -1,3 +1,4 @@
+using System.Linq.Expressions;
 using DriDrood.BlazorStore.Test.Store;
 
 namespace DriDrood.BlazorStore.Test;
@@ -6,7 +7,7 @@ public class StoreGetOrDefault
 {
     public StoreGetOrDefault()
     {
-        State state = new()
+        _state = new()
         {
             User = new()
             {
@@ -17,10 +18,11 @@ public class StoreGetOrDefault
             Count = 1,
         };
 
-        _store = new(state);
+        _store = new(_state);
     }
 
     private TestStore _store;
+    private State _state;
 
     [Fact]
     public void GetValue()
@@ -141,5 +143,19 @@ public class StoreGetOrDefault
         isRerendered = false;
         _store.Set(s => s.Dict["Test"], "TTT");
         Assert.True(isRerendered);
+    }
+
+    [Fact]
+    public void ObjectExpression()
+    {
+        bool isRerendered = false;
+        _ = _store.GetOrDefault(s => s.User!.Name, () => isRerendered = true);
+
+        Assert.False(isRerendered);
+
+        Expression<Func<State, object?>> expression = s => s.User;
+        _store.Set(expression, new User() { Name = "Test15", Age = 18 });
+        Assert.True(isRerendered);
+        Assert.Equal("Test15", _state.User!.Name);
     }
 }
