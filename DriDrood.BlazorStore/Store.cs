@@ -1,4 +1,5 @@
 using System.Linq.Expressions;
+using System.Reflection;
 using DriDrood.BlazorStore.Extensions;
 using DriDrood.BlazorStore.Tools;
 
@@ -150,12 +151,18 @@ public class Store<TState>
     {
         // create lambda value parameter
         ParameterExpression valueParamExpr = Expression.Parameter(typeof(TValue), "value");
+        Expression valueExpr = valueParamExpr;
+        // different value
+        if (expr.Body is MemberExpression memberExpr && memberExpr.Member is PropertyInfo propertyInfo && propertyInfo.PropertyType != typeof(TValue))
+        {
+            valueExpr = Expression.Convert(valueParamExpr, propertyInfo.PropertyType);
+        }
 
         Expression setExpr = (expr.Body is MethodCallExpression callExpr && callExpr.Method.Name == "get_Item")
             // replace get_item with set_item
-            ? Expression.Call(callExpr.Object, callExpr.Object!.Type.GetMethod("set_Item")!, [callExpr.Arguments[0], valueParamExpr])
+            ? Expression.Call(callExpr.Object, callExpr.Object!.Type.GetMethod("set_Item")!, [callExpr.Arguments[0], valueExpr])
             // assign value
-            : Expression.Assign(expr.Body, valueParamExpr);
+            : Expression.Assign(expr.Body, valueExpr);
 
         // create lambda
         Expression<Action<TState, TValue>> setterExpr = Expression.Lambda<Action<TState, TValue>>(
