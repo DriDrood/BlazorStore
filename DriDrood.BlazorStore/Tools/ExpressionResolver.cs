@@ -24,7 +24,14 @@ internal class ExpressionResolver<TState>
     {
         (object? result, MetadataNode? node) = ResolveInner(expressionPath.Body);
 
-        return ((TValue?)result, node);
+        return ((TValue?)(result ?? default(TValue)), node);
+    }
+    public (TValue? outValue, MetadataNode? outNode) ResolveOrNull<TValue>(Expression<Func<TState, TValue>> expressionPath)
+        where TValue : struct
+    {
+        (object? result, MetadataNode? node) = ResolveInner(expressionPath.Body);
+
+        return ((TValue?)(result ?? default), node);
     }
 
     private (object? outValue, MetadataNode? outNode) ResolveInner(Expression expr)

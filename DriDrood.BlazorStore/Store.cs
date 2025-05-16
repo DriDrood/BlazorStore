@@ -52,6 +52,26 @@ public class Store<TState>
         // return value
         return value;
     }
+    public virtual TValue? GetOrNull<TValue>(Expression<Func<TState, TValue>> expressionPath, Action? componentRerender = null)
+        where TValue : struct
+    {
+        // resolve expression
+        ExpressionResolver<TState> resolver = new(_state, _metadataRoot, IndirectDependencyHandling.Write);
+        (TValue? value, MetadataNode? node) = resolver.ResolveOrNull(expressionPath);
+
+        // add dependency
+        if (componentRerender is not null && node is not null)
+        {
+            node.Dependencies.Add(componentRerender);
+            foreach ((MetadataNode indirectParent, MetadataNode mergeNode) in resolver.IndirectParents)
+            {
+                indirectParent.IndirectDependencies.Add((componentRerender, mergeNode));
+            }
+        }
+
+        // return value
+        return value;
+    }
 
     public virtual void Set<TValue>(Expression<Func<TState, TValue>> expressionPath, TValue newValue)
     {
