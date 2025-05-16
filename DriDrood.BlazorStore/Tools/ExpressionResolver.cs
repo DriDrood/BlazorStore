@@ -107,6 +107,15 @@ internal class ExpressionResolver<TState>
             throw new Exception("Not supported collection type");
         }
 
+        // convert implicit/explicit
+        if (expr is UnaryExpression unaryExpr)
+        {
+            if (unaryExpr.NodeType == ExpressionType.Convert)
+            {
+                return ResolveInner(unaryExpr.Operand);
+            }
+        }
+
         // System.Linq.Expressions.BlockExpression
         // System.Linq.Expressions.DebugInfoExpression
         // System.Linq.Expressions.DefaultExpression
