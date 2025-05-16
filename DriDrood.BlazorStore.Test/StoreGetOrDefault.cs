@@ -12,7 +12,8 @@ public class StoreGetOrDefault
             User = new()
             {
                 Name = "Test",
-                Age = 18
+                Age = 18,
+                Role = Role.Admin,
             },
             Url = "www.example.com",
             Count = 1,
@@ -42,6 +43,20 @@ public class StoreGetOrDefault
     {
         string? userName = _store.GetOrDefault(s => s.EmptyUser!.Name);
         Assert.Null(userName);
+    }
+
+    [Fact]
+    public void GetValueStruct()
+    {
+        Role? role = _store.GetOrDefault(s => s.User!.Role);
+        Assert.Equal(Role.Admin, role);
+    }
+
+    [Fact]
+    public void GetNullStruct()
+    {
+        Role? role = _store.GetOrDefault(s => s.EmptyUser!.Role);
+        Assert.Null(role);
     }
 
     [Fact]
