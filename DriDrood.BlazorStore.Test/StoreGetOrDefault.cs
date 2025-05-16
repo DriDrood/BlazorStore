@@ -60,6 +60,13 @@ public class StoreGetOrDefault
     }
 
     [Fact]
+    public void GetDefaultNullableStruct()
+    {
+        Role? role = _store.GetOrDefault<Role?>(s => s.EmptyUser!.Role);
+        Assert.Null(role);
+    }
+
+    [Fact]
     public void GetNullStruct()
     {
         Role? role = _store.GetOrNull(s => s.EmptyUser!.Role);
